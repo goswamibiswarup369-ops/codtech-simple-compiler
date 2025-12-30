@@ -1,26 +1,54 @@
 #include <iostream>
-#include <fstream>
+#include <stack>
 using namespace std;
 
-int main() {
-    // Write to file
-    ofstream writeFile("sample.txt");
-    writeFile << "This is the first line written to the file.\n";
-    writeFile.close();
+int precedence(char op) {
+    if (op == '+' || op == '-') return 1;
+    if (op == '*' || op == '/') return 2;
+    return 0;
+}
 
-    // Append to file
-    ofstream appendFile("sample.txt", ios::app);
-    appendFile << "This line is appended to the file.\n";
-    appendFile.close();
+int applyOp(int a, int b, char op) {
+    if (op == '+') return a + b;
+    if (op == '-') return a - b;
+    if (op == '*') return a * b;
+    if (op == '/') return a / b;
+    return 0;
+}
 
-    // Read from file
-    ifstream readFile("sample.txt");
-    string line;
-    cout << "Reading file content:\n";
-    while (getline(readFile, line)) {
-        cout << line << endl;
+int evaluate(string exp) {
+    stack<int> values;
+    stack<char> ops;
+
+    for (int i = 0; i < exp.length(); i++) {
+        if (isdigit(exp[i])) {
+            values.push(exp[i] - '0');
+        } else {
+            while (!ops.empty() &&
+                   precedence(ops.top()) >= precedence(exp[i])) {
+                int b = values.top(); values.pop();
+                int a = values.top(); values.pop();
+                values.push(applyOp(a, b, ops.top()));
+                ops.pop();
+            }
+            ops.push(exp[i]);
+        }
     }
-    readFile.close();
 
+    while (!ops.empty()) {
+        int b = values.top(); values.pop();
+        int a = values.top(); values.pop();
+        values.push(applyOp(a, b, ops.top()));
+        ops.pop();
+    }
+
+    return values.top();
+}
+
+int main() {
+    string exp;
+    cout << "Enter expression: ";
+    cin >> exp;
+    cout << "Result: " << evaluate(exp);
     return 0;
 }
